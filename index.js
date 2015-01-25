@@ -15,8 +15,9 @@ app.get('/', function(req, res) {
 });
 
 app.get('/ship.png', function(req, res) {
-  res.sendFile(__dirname + '/ship.png');
+  res.sendFile(__dirname+'/ship.png');
 });
+
 
 io.on('connection', function(socket) {
 

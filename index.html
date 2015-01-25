@@ -105,6 +105,8 @@
     drawImage(g, ship, x, y, theta);
     for(var i in players) {
       var player = players[i];
+      player.x = player.x + (player.gx - player.x) * 0.3;
+      player.y = player.y + (player.gy - player.y) * 0.3;
       drawImage(g, ship, player.x, player.y, player.theta);
     
     }
@@ -115,13 +117,15 @@
 
   socket.on('location', function(id, x, y, theta){
     var player = players[id];
-    player.x = x;
-    player.y = y;
+    player.gx = x;
+    player.gy = y;
     player.theta = theta;
   });
 
   socket.on('connection', function(id, x, y, theta) {
    var player = players[id] = {}
+   player.gx = x;
+   player.gy = y;
    player.x = x
    player.y = y
    player.theta = theta
