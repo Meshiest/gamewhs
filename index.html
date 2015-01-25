@@ -107,7 +107,7 @@
       var player = players[i];
       player.x = player.x + (player.gx - player.x) * 0.3;
       player.y = player.y + (player.gy - player.y) * 0.3;
-      player.theta = (player.theta + Math.PI + ((player.gtheta - player.theta + Math.PI*3) * 0.3) % Math.PI*2 - Math.PI;
+      player.theta = (player.theta + Math.PI + ((player.gtheta - player.theta + Math.PI*3) * 0.3)) % Math.PI*2 - Math.PI;
       drawImage(g, ship, player.x, player.y, player.theta);
     
     }
