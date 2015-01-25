@@ -53,8 +53,8 @@
     window.ondevicemotion = function(e) {
       var accel = event.accelerationIncludingGravity;
       if(Math.abs(accel.y) > 1) {
-        keys[65] = accel.y < 0;
-        keys[68] = accel.y > 0;
+        keys[65] = accel.y > 0;
+        keys[68] = accel.y < 0;
       } else {
         keys[65] = keys[68] = false;
       }
