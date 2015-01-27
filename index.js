@@ -26,6 +26,10 @@ app.get('/pointer.png', function(req, res) {
   res.sendFile(__dirname+'/pointer.png');
 });
 
+app.get('/laser.png', function(req, res) {
+  res.sendFile(__dirname+'/laser.png');
+});
+
 io.on('connection', function(socket) {
 
   var user = {};
@@ -53,6 +57,17 @@ io.on('connection', function(socket) {
     user.y = y;
     user.theta = theta;
     socket.broadcast.emit('location', id, x, y, theta);
+  })
+
+  socket.on('laser', function(vx, vy, theta){
+    socket.broadcast.emit('laser',
+          user.x,
+          user.y,
+          vx,
+          vy,
+          theta,
+          new Date().getTime() + 500,
+          id)
   })
 
   socket.on('disconnect', function() {

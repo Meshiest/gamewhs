@@ -28,18 +28,25 @@
   var theta = 0;
   var x = 0;
   var y = 0;
+  var vx = 0;
+  var vy = 0;
+
   var ship = new Image();
   ship.src = 'ship.png';
   var bg = new Image();
   bg.src = 'background.jpg';
   var arrow = new Image();
   arrow.src = 'pointer.png';
+  var beam = new Image();
+  beam.src = 'laser.png';
+  
   var bgw = bgh = 0;
   bg.onload = function(){
     bgw = bg.width;
     bgh = bg.height;
   }
   var players = {}
+  var lasers = [];
   var tilt = 0;
 
 
@@ -47,13 +54,15 @@
   // 87, 65, 83, 68
   keys[87] = keys[65] = keys[83] = keys[68] = false;
 
+  var touch = {}
+
   $(document).on('touchstart', function(e) {
       e.preventDefault();
-      keys[87] = true;
+      keys[87] = true; 
   });
 
   $(document).on('touchend', function(e) {
-      keys[87] = false;
+    keys[87] = false;
   });
 
   
@@ -78,6 +87,20 @@
   
   $(window).on("keydown",function(e){
     keys[e.keyCode] = true;
+    switch(e.keyCode) {
+      case 32:
+        //console.log("hi");
+        socket.emit('laser', vx + Math.cos(theta)*50,
+          vy + Math.sin(theta)*50,
+          theta);
+        createLaser(x, y,
+          vx + Math.cos(theta)*50,
+          vy + Math.sin(theta)*50,
+          theta,
+          new Date().getTime() + 500,
+          -1);
+        break;
+    }
   });
   $(window).on("keyup",function(e){
     keys[e.keyCode] = false;
@@ -127,9 +150,18 @@
         theta -= Math.PI*2;
 
     if(keys[87]) {
-      x += Math.cos(theta)*delta*400;
-      y += Math.sin(theta)*delta*400;
+      vx += Math.cos(theta)*delta*30;
+      vy += Math.sin(theta)*delta*30;
     }
+    var speed = Math.hypot(vx);
+    if(speed > 400) {
+      var angle = Math.atan2(vy,vx);
+      vx = Math.cos(angle)*400;
+      vy = Math.sin(angle)*400;
+    }
+
+    x += vx;
+    y += vy;
     
     g.translate(canvas.width/2 - x, canvas.height/2 - y);
     drawImage(g, ship, x, y, theta);
@@ -155,6 +187,22 @@
         drawImage(g, ship, player.x, player.y, player.theta);
       }
     }
+    for(var i in lasers) {
+      var laser = lasers[i];
+      if(laser.remove < curr) {
+        delete lasers[i];
+        i--;
+      }
+    }
+
+    for(var i in lasers) {
+      var laser = lasers[i];
+      laser.x += laser.vx;
+      laser.y += laser.vy;
+      if(Math.hypot(x-laser.x,y-laser.y) < canvas.width+canvas.height) {
+        drawImage(g, beam, laser.x, laser.y, laser.theta);
+      }
+    }
 
     socket.emit('location', x, y, theta);
     g.restore();
@@ -176,9 +224,27 @@
    player.theta = theta;
   });
 
+  socket.on('laser', function(x, y, vx, vy, angle, remove, owner){
+    createLaser(x, y, vx, vy, angle, remove, owner);
+  });
+
   socket.on('disconnection', function(id) {
     delete players[id];
   });
+
+  function createLaser(x, y, vx, vy, theta, remove, owner) {
+    var laser = {};
+    laser.x = x;
+    laser.y = y;
+    laser.vx = vx;
+    laser.vy = vy;
+    laser.theta = theta;
+    laser.owner = owner;
+    laser.remove = remove;
+    lasers.push(laser);
+    return laser;
+  }
+
   function drawImage(g, img, x, y, theta) {
     g.save();
     g.translate(x, y);
