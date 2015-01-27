@@ -30,6 +30,15 @@
   var y = 0;
   var ship = new Image();
   ship.src = 'ship.png';
+  var bg = new Image();
+  bg.src = 'background.jpg';
+  var arrow = new Image();
+  arrow.src = 'pointer.png';
+  var bgw = bgh = 0;
+  bg.onload = function(){
+    bgw = bg.width;
+    bgh = bg.height;
+  }
   var players = {}
 
 
@@ -52,9 +61,14 @@
   if(window.DeviceMotionEvent != undefined) {
     window.ondevicemotion = function(e) {
       var accel = event.accelerationIncludingGravity;
-      if(Math.abs(accel.y) > 1) {
-        keys[65] = accel.y > 0;
-        keys[68] = accel.y < 0;
+      var tilt = window.innerHeight > window.innerWidth ? accel.x : accel.y;
+      
+      if(window.orientation / 2 > 1)
+        tilt = -tilt;
+      
+      if(Math.abs(tilt) > 1) {
+        keys[65] = tilt > 0;
+        keys[68] = tilt < 0;
       } else {
         keys[65] = keys[68] = false;
       }
@@ -81,11 +95,22 @@
 
   setInterval(function() {
     g.save();
-    g.fillStyle="#FFFFFF";
-    g.fillRect(0,0,canvas.width,canvas.height);
+
+    canvas.width = $(window).width();
+    canvas.height = $(window).height();
+
+
+    //g.fillStyle="#FFFFFF";
+    //g.fillRect(0,0,canvas.width,canvas.height);
     last = curr;
     curr = new Date().getTime();
     var delta = (curr - last)/1000.0;
+
+    for(var lx = ((-x) % bgw)-bgw; lx < canvas.width; lx += bgw) {
+      for(var ly = ((-y) % bgh)-bgh; ly < canvas.height; ly += bgh) {
+        g.drawImage(bg, lx, ly);
+      }
+    }
 
     if(keys[68]) {
       theta += Math.PI*delta;
@@ -103,12 +128,25 @@
     
     g.translate(canvas.width/2 - x, canvas.height/2 - y);
     drawImage(g, ship, x, y, theta);
+    
+    var wo2 = canvas.width/2 + ship.width/2;
+    var ho2 = canvas.height/2 + ship.height/2;
+
     for(var i in players) {
       var player = players[i];
-      player.x = player.x + (player.gx - player.x) * 0.3;
-      player.y = player.y + (player.gy - player.y) * 0.3;
-      drawImage(g, ship, player.x, player.y, player.theta);
-    
+      var offX = x - player.x;
+      var offY = y - player.y;
+      var onScreen =  offX < -wo2 || offX  > wo2 || offY < -ho2 || offY > ho2;
+      if(onScreen){
+        var atan = Math.atan2(player.y-y,player.x-x);
+        var px = Math.cos(atan) * 100;
+        var py = Math.sin(atan) * 100;
+        drawImage(g, arrow, x + px, y + py, atan);
+      } else {
+        player.x = player.x + (player.gx - player.x) * 0.3;
+        player.y = player.y + (player.gy - player.y) * 0.3;
+        drawImage(g, ship, player.x, player.y, player.theta);
+      }
     }
 
     socket.emit('location', x, y, theta);
@@ -126,9 +164,9 @@
    var player = players[id] = {}
    player.gx = x;
    player.gy = y;
-   player.x = x
-   player.y = y
-   player.theta = theta
+   player.x = x;
+   player.y = y;
+   player.theta = theta;
   });
 
   socket.on('disconnection', function(id) {

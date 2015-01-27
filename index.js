@@ -18,6 +18,13 @@ app.get('/ship.png', function(req, res) {
   res.sendFile(__dirname+'/ship.png');
 });
 
+app.get('/background.jpg', function(req, res) {
+  res.sendFile(__dirname+'/background.jpg');
+});
+
+app.get('/pointer.png', function(req, res) {
+  res.sendFile(__dirname+'/pointer.png');
+});
 
 io.on('connection', function(socket) {
 
@@ -28,7 +35,7 @@ io.on('connection', function(socket) {
   user.joinTime = new Date().getTime();
   user.socket = socket;
 
-  socket.broadcast.emit('connection', user.id);
+  socket.broadcast.emit('connection', user.id, 0, 0, 0);
 
   users[id] = user;
 
