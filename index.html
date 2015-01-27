@@ -40,6 +40,7 @@
     bgh = bg.height;
   }
   var players = {}
+  var tilt = 0;
 
 
   var keys = {};
@@ -61,7 +62,7 @@
   if(window.DeviceMotionEvent != undefined) {
     window.ondevicemotion = function(e) {
       var accel = event.accelerationIncludingGravity;
-      var tilt = window.innerHeight > window.innerWidth ? accel.x : accel.y;
+      tilt = window.innerHeight > window.innerWidth ? accel.x : accel.y;
       
       if(window.orientation / 2 > 1)
         tilt = -tilt;
@@ -112,18 +113,22 @@
       }
     }
 
-    if(keys[68]) {
+    if(tilt != 0 && Math.abs(tilt) > 1) {
+      theta -= Math.PI*tilt/4*delta
+    } else if(keys[68]) {
       theta += Math.PI*delta;
-      while(theta > Math.PI)
-        theta -= Math.PI*2;
     } else if(keys[65]) {
       theta -= Math.PI*delta;
-      while(theta < -Math.PI)
-        theta += Math.PI*2;
     }
+
+    while(theta < -Math.PI)
+        theta += Math.PI*2;
+    while(theta > Math.PI)
+        theta -= Math.PI*2;
+
     if(keys[87]) {
-      x += Math.cos(theta)*delta*300;
-      y += Math.sin(theta)*delta*300;
+      x += Math.cos(theta)*delta*400;
+      y += Math.sin(theta)*delta*400;
     }
     
     g.translate(canvas.width/2 - x, canvas.height/2 - y);
@@ -137,14 +142,16 @@
       var offX = x - player.x;
       var offY = y - player.y;
       var onScreen =  offX < -wo2 || offX  > wo2 || offY < -ho2 || offY > ho2;
+
+      player.x = player.x + (player.gx - player.x) * 0.3;
+      player.y = player.y + (player.gy - player.y) * 0.3;
+
       if(onScreen){
         var atan = Math.atan2(player.y-y,player.x-x);
         var px = Math.cos(atan) * 100;
         var py = Math.sin(atan) * 100;
         drawImage(g, arrow, x + px, y + py, atan);
       } else {
-        player.x = player.x + (player.gx - player.x) * 0.3;
-        player.y = player.y + (player.gy - player.y) * 0.3;
         drawImage(g, ship, player.x, player.y, player.theta);
       }
     }
