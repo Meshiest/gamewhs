@@ -201,10 +201,12 @@
         drawImage(g, beam, laser.x, laser.y, laser.theta);
       }
     }
-
-    socket.emit('location', x, y, theta);
     g.restore();
   },25);
+
+  setInterval(function(){
+    socket.emit('location', x, y, theta);
+  }, 50);
 
   socket.on('location', function(id, x, y, theta){
     var player = players[id];

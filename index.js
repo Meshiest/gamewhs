@@ -60,6 +60,7 @@ io.on('connection', function(socket) {
   })
 
   socket.on('laser', function(vx, vy, theta){
+    //console.log("laser "+user.id);
     socket.broadcast.emit('laser',
           user.x,
           user.y,
@@ -67,7 +68,7 @@ io.on('connection', function(socket) {
           vy,
           theta,
           new Date().getTime() + 500,
-          id)
+          user.id)
   })
 
   socket.on('disconnect', function() {
