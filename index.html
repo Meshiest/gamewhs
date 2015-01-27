@@ -90,13 +90,11 @@
     switch(e.keyCode) {
       case 32:
         //console.log("hi");
-        socket.emit('laser', vx + Math.cos(theta)*50,
-          vy + Math.sin(theta)*50,
-          theta);
-        createLaser(x, y,
-          vx + Math.cos(theta)*50,
-          vy + Math.sin(theta)*50,
-          theta,
+        var dirX = vx + Math.cos(theta)*2000;
+        var dirY = vy + Math.sin(theta)*2000
+        var angle = Math.atan2(dirY,dirX);
+        socket.emit('laser', dirX, dirY, angle);
+        createLaser(x, y, dirX, dirY, angle,
           new Date().getTime() + 500,
           -1);
         break;
@@ -137,7 +135,7 @@
     }
 
     if(tilt != 0 && Math.abs(tilt) > 1) {
-      theta -= Math.PI*tilt/4*delta
+      theta += Math.PI*tilt/4*delta
     } else if(keys[68]) {
       theta += Math.PI*delta;
     } else if(keys[65]) {
@@ -150,18 +148,18 @@
         theta -= Math.PI*2;
 
     if(keys[87]) {
-      vx += Math.cos(theta)*delta*30;
-      vy += Math.sin(theta)*delta*30;
+      vx += Math.cos(theta)*delta*800;
+      vy += Math.sin(theta)*delta*800;
     }
-    var speed = Math.hypot(vx);
-    if(speed > 400) {
+    var speed = Math.hypot(vx, vy);
+    if(speed > 1200) {
       var angle = Math.atan2(vy,vx);
-      vx = Math.cos(angle)*400;
-      vy = Math.sin(angle)*400;
+      vx = Math.cos(angle)*1200;
+      vy = Math.sin(angle)*1200;
     }
 
-    x += vx;
-    y += vy;
+    x += vx*delta;
+    y += vy*delta;
     
     g.translate(canvas.width/2 - x, canvas.height/2 - y);
     drawImage(g, ship, x, y, theta);
@@ -197,8 +195,8 @@
 
     for(var i in lasers) {
       var laser = lasers[i];
-      laser.x += laser.vx;
-      laser.y += laser.vy;
+      laser.x += laser.vx*delta;
+      laser.y += laser.vy*delta;
       if(Math.hypot(x-laser.x,y-laser.y) < canvas.width+canvas.height) {
         drawImage(g, beam, laser.x, laser.y, laser.theta);
       }
